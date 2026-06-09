@@ -1,5 +1,7 @@
 # StableOfWar NIST-Beacon Raffle
 
+[![StableOfWar daily raffle](https://github.com/mekstrem/stableofwar-raffle/actions/workflows/daily-draw.yml/badge.svg?branch=main)](https://github.com/mekstrem/stableofwar-raffle/actions/workflows/daily-draw.yml)
+
 This repository runs the audited StableOfWar daily raffle.
 
 - Event: `StableOfWar`
@@ -27,11 +29,38 @@ SHA-256 score, and selects the first 3 names. Because the participant list,
 history, NIST pulse, and result record are committed, anyone can rerun the
 verifier and detect tampering.
 
+## Easy public verification
+
+Anyone can verify the committed results:
+
+```bash
+git clone https://github.com/mekstrem/stableofwar-raffle.git
+cd stableofwar-raffle
+python scripts/verify_all.py
+```
+
+To verify one draw only:
+
+```bash
+python scripts/verify.py --date 2026-06-09
+```
+
+The badge at the top shows whether the official GitHub Actions workflow passed
+on the official repository. The badge is only a convenience indicator; the
+stronger proof is that the verifier passes on a specific commit from
+`https://github.com/mekstrem/stableofwar-raffle`.
+
+If someone clones or forks the repository, they can change files locally and
+create different winners, but that will not change the official GitHub commit
+history. Compare the Discord post's commit link and proof hash with the
+official repository, not with a random copy.
+
 ## Run locally
 
 ```powershell
 python scripts\draw.py --date 2026-06-09 --nist-pulse-file tests\fixtures\nist-pulse-2026-06-09.json
 python scripts\verify.py --date 2026-06-09
+python scripts\verify_all.py
 python -m unittest discover -s tests
 ```
 
@@ -48,8 +77,7 @@ minute, so the pulse is still chosen after the committed participant list exists
 
 ## GitHub setup
 
-1. Create a private GitHub repository while preparing the event. Make it public
-   later if you want everyone to self-verify without being granted access.
+1. Create the GitHub repository.
 2. Push this local repository to it.
 3. Enable GitHub Actions.
 4. For the first June 9 run, if the scheduled time has already passed, start
