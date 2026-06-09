@@ -1,0 +1,67 @@
+name: StableOfWar daily raffle
+
+on:
+  schedule:
+    - cron: "0 16 9-15 6 *"
+  workflow_dispatch:
+    inputs:
+      draw_date:
+        description: "Draw date as YYYY-MM-DD"
+        required: false
+        type: string
+      not_before_now:
+        description: "Use a NIST pulse no earlier than the current UTC minute"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  draw:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Resolve draw date
+        id: date
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.draw_date }}" ]; then
+            echo "draw_date=${{ inputs.draw_date }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "draw_date=$(TZ=Europe/Stockholm date +%F)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run draw
+        shell: bash
+        run: |
+          args=(--date "${{ steps.date.outputs.draw_date }}")
+          if [ "${{ inputs.not_before_now }}" = "true" ]; then
+            args+=(--not-before-now)
+          fi
+          python scripts/draw.py "${args[@]}"
+
+      - name: Verify draw
+        run: python scripts/verify.py --date "${{ steps.date.outputs.draw_date }}"
+
+      - name: Commit draw artifacts
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add results announcements images
+          if git diff --cached --quiet; then
+            echo "No draw artifacts changed."
+          else
+            git commit -m "chore: add StableOfWar draw ${{ steps.date.outputs.draw_date }}"
+            git push
+          fi
+

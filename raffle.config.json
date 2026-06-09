@@ -1,0 +1,17 @@
+{
+  "event_name": "StableOfWar",
+  "timezone": "Europe/Stockholm",
+  "draw_time": "18:00",
+  "start_date": "2026-06-09",
+  "end_date": "2026-06-15",
+  "winners_per_day": 3,
+  "participants_file": "participants.txt",
+  "results_dir": "results",
+  "announcements_dir": "announcements",
+  "images_dir": "images",
+  "nist": {
+    "base_url": "https://beacon.nist.gov/beacon/2.0",
+    "chain_index": 2
+  }
+}
+
