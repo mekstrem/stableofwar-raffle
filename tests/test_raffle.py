@@ -82,7 +82,13 @@ class RaffleTests(unittest.TestCase):
 
             ok, errors = verify_record(root, draw_date)
             self.assertTrue(ok, errors)
-            self.assertTrue((paths.announcements / "2026-06-09.md").exists())
+            announcement_path = paths.announcements / "2026-06-09.md"
+            self.assertTrue(announcement_path.exists())
+            announcement = announcement_path.read_text(encoding="utf-8")
+            self.assertIn("StableOfWar raffle - 2026-06-09", announcement)
+            self.assertIn("Today's winners are in the image below.", announcement)
+            self.assertIn("each pilot can only win once", announcement)
+            self.assertIn("https://github.com/mekstrem/stableofwar-raffle", announcement)
             self.assertTrue((paths.images / "2026-06-09.png").exists())
 
     def test_draw_and_verify_with_lookup_url_in_nist_pulse(self) -> None:

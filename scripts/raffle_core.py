@@ -404,26 +404,14 @@ def write_json(path: Path, value: Any) -> None:
 
 def write_announcement(path: Path, record: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    winners = "\n".join(f"{index}. {name}" for index, name in enumerate(record["winners"], start=1))
-    nist_url = record["nistPulse"].get("uri") or record["nistPulse"].get("lookupUrl", "")
-    source_commit = record.get("sourceCommit") or "local/uncommitted"
-    text = f"""# StableOfWar raffle winners - {record['drawDate']}
+    text = f"""StableOfWar raffle - {record['drawDate']}
 
-{winners}
+Today's winners are in the image below.
 
-Draw details:
-- Entries: {record['participantsCount']}
-- Eligible today: {record['eligibleCount']}
-- Prior winners excluded: {record['priorWinnersCount']}
-- NIST pulse: {record['nistPulse']['pulseIndex']} ({record['nistPulse']['timeStamp']})
-- NIST pulse link: {nist_url}
-- Proof hash: `{record['proof_hash']}`
-- Source commit: `{source_commit}`
+As a reminder: each pilot can only win once during StableOfWar, so today's winners are excluded from the next draws.
 
-Verification:
-```bash
-python scripts/verify.py --date {record['drawDate']}
-```
+The draw is verifiable here:
+https://github.com/mekstrem/stableofwar-raffle
 """
     path.write_text(text, encoding="utf-8")
 
