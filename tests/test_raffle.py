@@ -85,6 +85,30 @@ class RaffleTests(unittest.TestCase):
             self.assertTrue((paths.announcements / "2026-06-09.md").exists())
             self.assertTrue((paths.images / "2026-06-09.png").exists())
 
+    def test_draw_and_verify_with_lookup_url_in_nist_pulse(self) -> None:
+        with self.temp_repo() as root:
+            config = load_config(root)
+            paths = get_paths(root, config)
+            participants = load_participants(paths.participants)
+            pulse = read_nist_pulse_file(
+                root / "tests" / "fixtures" / "nist-pulse-2026-06-09.json"
+            )
+            pulse["lookupUrl"] = "https://beacon.nist.gov/beacon/2.0/chain/2/pulse/1000001"
+            draw_date = parse_date("2026-06-09")
+            record = build_draw_record(
+                config=config,
+                draw_date=draw_date,
+                participants=participants,
+                prior_records=[],
+                pulse=pulse,
+                target_utc=scheduled_draw_time_utc(config, draw_date),
+                target_reason="scheduled_draw_time",
+            )
+            save_draw_artifacts(paths, record)
+
+            ok, errors = verify_record(root, draw_date)
+            self.assertTrue(ok, errors)
+
     def test_prior_winners_are_excluded(self) -> None:
         with self.temp_repo() as root:
             config = load_config(root)

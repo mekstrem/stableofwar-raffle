@@ -157,7 +157,7 @@ def result_path(paths: Paths, draw_date: date) -> Path:
 
 
 def load_json(path: Path) -> Any:
-    with path.open("r", encoding="utf-8") as handle:
+    with path.open("r", encoding="utf-8-sig") as handle:
         return json.load(handle)
 
 
@@ -218,7 +218,7 @@ def normalize_nist_pulse(payload: dict[str, Any]) -> dict[str, Any]:
     }
     if "period" in pulse:
         normalized["period"] = int(pulse["period"])
-    for optional in ("precommitmentValue", "signatureValue"):
+    for optional in ("lookupUrl", "precommitmentValue", "signatureValue"):
         if optional in pulse:
             normalized[optional] = pulse[optional]
     parse_nist_timestamp(normalized["timeStamp"])
