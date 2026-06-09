@@ -74,26 +74,3 @@ python scripts\verify.py --date 2026-06-09
 Use `--not-before-now` for the first manual June 9 run if setup happens after
 18:00 Stockholm. It forces the seed pulse to be no earlier than the current
 minute, so the pulse is still chosen after the committed participant list exists.
-
-## GitHub setup
-
-1. Create the GitHub repository.
-2. Push this local repository to it.
-3. Enable GitHub Actions.
-4. For the first June 9 run, if the scheduled time has already passed, start
-   the `StableOfWar daily raffle` workflow manually with:
-   - `draw_date`: `2026-06-09`
-   - `not_before_now`: `true`
-
-The workflow commits these artifacts for each draw:
-
-- `results/YYYY-MM-DD.json`
-- `announcements/YYYY-MM-DD.md`
-- `images/YYYY-MM-DD.png`
-
-Post the Markdown message or PNG image manually in Discord. Include the GitHub
-commit link so people can verify the draw.
-
-For stronger tamper resistance, enable branch protection on `main` before the
-event is shared broadly. GitHub may require a public repository or a paid plan
-for branch protection on private repositories.
