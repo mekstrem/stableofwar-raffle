@@ -65,3 +65,7 @@ The workflow commits these artifacts for each draw:
 
 Post the Markdown message or PNG image manually in Discord. Include the GitHub
 commit link so people can verify the draw.
+
+For stronger tamper resistance, enable branch protection on `main` before the
+event is shared broadly. GitHub may require a public repository or a paid plan
+for branch protection on private repositories.
