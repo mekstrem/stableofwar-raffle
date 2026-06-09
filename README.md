@@ -48,7 +48,8 @@ minute, so the pulse is still chosen after the committed participant list exists
 
 ## GitHub setup
 
-1. Create a public GitHub repository.
+1. Create a private GitHub repository while preparing the event. Make it public
+   later if you want everyone to self-verify without being granted access.
 2. Push this local repository to it.
 3. Enable GitHub Actions.
 4. For the first June 9 run, if the scheduled time has already passed, start
@@ -64,4 +65,3 @@ The workflow commits these artifacts for each draw:
 
 Post the Markdown message or PNG image manually in Discord. Include the GitHub
 commit link so people can verify the draw.
-
