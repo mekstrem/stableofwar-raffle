@@ -252,7 +252,7 @@ def fetch_nist_pulse_at_or_after(
     config: dict[str, Any],
     target_utc: datetime,
     timeout_seconds: int = 20,
-    max_wait_seconds: int = 180,
+    max_wait_seconds: int = 900,
 ) -> dict[str, Any]:
     base_url = config["nist"]["base_url"].rstrip("/")
     chain_index = int(config["nist"].get("chain_index", 2))
