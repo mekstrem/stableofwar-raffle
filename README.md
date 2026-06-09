@@ -55,22 +55,10 @@ create different winners, but that will not change the official GitHub commit
 history. Compare the Discord post's commit link and proof hash with the
 official repository, not with a random copy.
 
-## Run locally
+## Checks
 
 ```powershell
-python scripts\draw.py --date 2026-06-09 --nist-pulse-file tests\fixtures\nist-pulse-2026-06-09.json
-python scripts\verify.py --date 2026-06-09
 python scripts\verify_all.py
+python scripts\verify.py --date 2026-06-09
 python -m unittest discover -s tests
 ```
-
-For a real draw, omit `--nist-pulse-file` so the script fetches the NIST pulse:
-
-```powershell
-python scripts\draw.py --date 2026-06-09 --not-before-now
-python scripts\verify.py --date 2026-06-09
-```
-
-Use `--not-before-now` for the first manual June 9 run if setup happens after
-18:00 Stockholm. It forces the seed pulse to be no earlier than the current
-minute, so the pulse is still chosen after the committed participant list exists.
