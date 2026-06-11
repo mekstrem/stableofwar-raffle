@@ -2,7 +2,7 @@ name: StableOfWar daily raffle
 
 on:
   schedule:
-    - cron: "3 19 9-15 6 *
+    - cron: "3 19 9-15 6 *"
   workflow_dispatch:
     inputs:
       draw_date:
