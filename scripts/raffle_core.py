@@ -104,8 +104,14 @@ def ceil_to_next_minute(value: datetime) -> datetime:
 
 
 def target_pulse_time_utc(
-    config: dict[str, Any], draw_date: date, not_before_now: bool
+    config: dict[str, Any],
+    draw_date: date,
+    not_before_now: bool,
+    pulse_after_trigger: bool = False,
 ) -> tuple[datetime, str]:
+    if pulse_after_trigger:
+        return ceil_to_next_minute(datetime.now(timezone.utc)), "workflow_trigger_time"
+
     scheduled = scheduled_draw_time_utc(config, draw_date)
     if not not_before_now:
         return scheduled, "scheduled_draw_time"

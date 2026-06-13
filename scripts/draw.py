@@ -31,6 +31,11 @@ def main() -> int:
         help="Use a pulse no earlier than the current UTC minute when that is later than the scheduled draw time",
     )
     parser.add_argument(
+        "--pulse-after-trigger",
+        action="store_true",
+        help="Use the next NIST pulse after this draw command starts, ignoring the configured draw time",
+    )
+    parser.add_argument(
         "--skip-if-nist-unavailable",
         action="store_true",
         help="Exit successfully without artifacts if the target NIST pulse has not been published",
@@ -51,7 +56,7 @@ def main() -> int:
         participants = load_participants(paths.participants)
         prior_records = load_prior_records(config, paths, draw_date)
         target_utc, target_reason = target_pulse_time_utc(
-            config, draw_date, args.not_before_now
+            config, draw_date, args.not_before_now, args.pulse_after_trigger
         )
 
         if args.nist_pulse_file:

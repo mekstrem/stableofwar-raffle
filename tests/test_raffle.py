@@ -30,6 +30,7 @@ from raffle_core import (  # noqa: E402
     result_path,
     save_draw_artifacts,
     scheduled_draw_time_utc,
+    target_pulse_time_utc,
     pulse_index_at_or_after,
     validate_draw_date,
     verify_record,
@@ -64,6 +65,15 @@ class RaffleTests(unittest.TestCase):
         }
         target = scheduled_draw_time_utc(load_config(ROOT), parse_date("2026-06-09"))
         self.assertEqual(1824825, pulse_index_at_or_after(latest, target))
+
+    def test_pulse_after_trigger_ignores_scheduled_draw_time(self) -> None:
+        config = load_config(ROOT)
+        target, reason = target_pulse_time_utc(
+            config, parse_date("2026-06-15"), False, pulse_after_trigger=True
+        )
+        self.assertEqual("workflow_trigger_time", reason)
+        self.assertEqual(0, target.second)
+        self.assertEqual(0, target.microsecond)
 
     def test_nist_pulse_not_available_is_temporary_error(self) -> None:
         error = urllib.error.HTTPError(

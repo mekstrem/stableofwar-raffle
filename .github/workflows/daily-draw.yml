@@ -9,11 +9,6 @@ on:
         description: "Draw date as YYYY-MM-DD"
         required: false
         type: string
-      not_before_now:
-        description: "Use a NIST pulse no earlier than the current UTC minute"
-        required: false
-        default: false
-        type: boolean
 
 permissions:
   contents: write
@@ -56,10 +51,7 @@ jobs:
         if: steps.date.outputs.has_draw == 'true'
         shell: bash
         run: |
-          args=(--date "${{ steps.date.outputs.draw_date }}")
-          if [ "${{ inputs.not_before_now }}" = "true" ]; then
-            args+=(--not-before-now)
-          fi
+          args=(--date "${{ steps.date.outputs.draw_date }}" --pulse-after-trigger)
           if [ "${{ github.event_name }}" = "schedule" ]; then
             args+=(--skip-if-nist-unavailable)
           fi
