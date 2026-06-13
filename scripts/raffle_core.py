@@ -310,8 +310,20 @@ def fetch_nist_pulse_at_or_after(
             last_error = exc
 
         if time.monotonic() >= deadline:
+            if isinstance(last_error, NistPulseUnavailable):
+                raise last_error
             raise RaffleError(f"No NIST pulse found at or after {format_nist_time(target_utc)}: {last_error}")
         time.sleep(10)
+
+
+def fetch_latest_nist_pulse(
+    config: dict[str, Any],
+    timeout_seconds: int = 20,
+) -> dict[str, Any]:
+    base_url = config["nist"]["base_url"].rstrip("/")
+    pulse = normalize_nist_pulse(fetch_json(f"{base_url}/chain/last/pulse/last", timeout_seconds))
+    pulse["lookupUrl"] = f"{base_url}/chain/{pulse['chainIndex']}/pulse/{pulse['pulseIndex']}"
+    return pulse
 
 
 def build_seed_material(

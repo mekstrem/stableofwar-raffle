@@ -51,7 +51,7 @@ jobs:
         if: steps.date.outputs.has_draw == 'true'
         shell: bash
         run: |
-          args=(--date "${{ steps.date.outputs.draw_date }}" --pulse-after-trigger)
+          args=(--date "${{ steps.date.outputs.draw_date }}" --pulse-after-trigger --fallback-latest-nist)
           if [ "${{ github.event_name }}" = "schedule" ]; then
             args+=(--skip-if-nist-unavailable)
           fi

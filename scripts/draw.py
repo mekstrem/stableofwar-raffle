@@ -8,12 +8,14 @@ from raffle_core import (
     RaffleError,
     build_draw_record,
     common_arg_parser,
+    fetch_latest_nist_pulse,
     fetch_nist_pulse_at_or_after,
     get_paths,
     load_config,
     load_participants,
     load_prior_records,
     parse_date,
+    parse_nist_timestamp,
     read_nist_pulse_file,
     result_path,
     save_draw_artifacts,
@@ -40,6 +42,11 @@ def main() -> int:
         action="store_true",
         help="Exit successfully without artifacts if the target NIST pulse has not been published",
     )
+    parser.add_argument(
+        "--fallback-latest-nist",
+        action="store_true",
+        help="Use the latest published NIST pulse if the target pulse is unavailable",
+    )
     args = parser.parse_args()
 
     try:
@@ -62,7 +69,17 @@ def main() -> int:
         if args.nist_pulse_file:
             pulse = read_nist_pulse_file(root / args.nist_pulse_file)
         else:
-            pulse = fetch_nist_pulse_at_or_after(config, target_utc)
+            try:
+                max_wait_seconds = 0 if args.fallback_latest_nist else 900
+                pulse = fetch_nist_pulse_at_or_after(
+                    config, target_utc, max_wait_seconds=max_wait_seconds
+                )
+            except NistPulseUnavailable:
+                if not args.fallback_latest_nist:
+                    raise
+                pulse = fetch_latest_nist_pulse(config)
+                target_reason = f"{target_reason}_nist_latest_fallback"
+                target_utc = parse_nist_timestamp(pulse["timeStamp"])
 
         record = build_draw_record(
             config=config,

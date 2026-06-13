@@ -19,6 +19,7 @@ from raffle_core import (  # noqa: E402
     NistPulseUnavailable,
     RaffleError,
     build_draw_record,
+    fetch_latest_nist_pulse,
     fetch_json,
     get_paths,
     load_config,
@@ -86,6 +87,42 @@ class RaffleTests(unittest.TestCase):
         with mock.patch("urllib.request.urlopen", side_effect=error):
             with self.assertRaises(NistPulseUnavailable):
                 fetch_json(error.url, 1)
+
+    def test_latest_nist_fallback_uses_chain_last_pulse_last(self) -> None:
+        config = load_config(ROOT)
+        payload = json.dumps(
+            {
+                "pulse": {
+                    "chainIndex": 2,
+                    "pulseIndex": 1827763,
+                    "timeStamp": "2026-06-11T16:58:00.000Z",
+                    "outputValue": "ABCD",
+                    "statusCode": 0,
+                    "period": 60000,
+                }
+            }
+        ).encode("utf-8")
+
+        class Response(BytesIO):
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+        with mock.patch("urllib.request.urlopen", return_value=Response(payload)) as urlopen:
+            pulse = fetch_latest_nist_pulse(config)
+
+        request = urlopen.call_args.args[0]
+        self.assertEqual(
+            "https://beacon.nist.gov/beacon/2.0/chain/last/pulse/last",
+            request.full_url,
+        )
+        self.assertEqual(1827763, pulse["pulseIndex"])
+        self.assertEqual(
+            "https://beacon.nist.gov/beacon/2.0/chain/2/pulse/1827763",
+            pulse["lookupUrl"],
+        )
 
     def test_draw_and_verify_with_fixture(self) -> None:
         with self.temp_repo() as root:
