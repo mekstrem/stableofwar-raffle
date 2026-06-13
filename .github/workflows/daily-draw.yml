@@ -39,23 +39,43 @@ jobs:
         run: |
           if [ -n "${{ inputs.draw_date }}" ]; then
             echo "draw_date=${{ inputs.draw_date }}" >> "$GITHUB_OUTPUT"
+            echo "has_draw=true" >> "$GITHUB_OUTPUT"
           else
-            echo "draw_date=$(TZ=Europe/Stockholm date +%F)" >> "$GITHUB_OUTPUT"
+            draw_date="$(python scripts/resolve_draw_date.py)"
+            if [ -n "$draw_date" ]; then
+              echo "draw_date=$draw_date" >> "$GITHUB_OUTPUT"
+              echo "has_draw=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "No missing draw date is due yet."
+              echo "has_draw=false" >> "$GITHUB_OUTPUT"
+            fi
           fi
 
       - name: Run draw
+        id: draw
+        if: steps.date.outputs.has_draw == 'true'
         shell: bash
         run: |
           args=(--date "${{ steps.date.outputs.draw_date }}")
           if [ "${{ inputs.not_before_now }}" = "true" ]; then
             args+=(--not-before-now)
           fi
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            args+=(--skip-if-nist-unavailable)
+          fi
           python scripts/draw.py "${args[@]}"
+          if [ -f "results/${{ steps.date.outputs.draw_date }}.json" ]; then
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "created=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Verify draw
+        if: steps.draw.outputs.created == 'true'
         run: python scripts/verify.py --date "${{ steps.date.outputs.draw_date }}"
 
       - name: Commit draw artifacts
+        if: steps.draw.outputs.created == 'true'
         shell: bash
         run: |
           git config user.name "github-actions[bot]"

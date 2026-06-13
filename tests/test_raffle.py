@@ -4,8 +4,11 @@ import json
 import shutil
 import tempfile
 import unittest
+import urllib.error
+from io import BytesIO
 from datetime import timezone
 from pathlib import Path
+from unittest import mock
 
 import sys
 
@@ -13,8 +16,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from raffle_core import (  # noqa: E402
+    NistPulseUnavailable,
     RaffleError,
     build_draw_record,
+    fetch_json,
     get_paths,
     load_config,
     load_participants,
@@ -59,6 +64,18 @@ class RaffleTests(unittest.TestCase):
         }
         target = scheduled_draw_time_utc(load_config(ROOT), parse_date("2026-06-09"))
         self.assertEqual(1824825, pulse_index_at_or_after(latest, target))
+
+    def test_nist_pulse_not_available_is_temporary_error(self) -> None:
+        error = urllib.error.HTTPError(
+            url="https://beacon.nist.gov/beacon/2.0/chain/2/pulse/1829145",
+            code=404,
+            msg="Not Found",
+            hdrs=None,
+            fp=BytesIO(b"Pulse Not Available."),
+        )
+        with mock.patch("urllib.request.urlopen", side_effect=error):
+            with self.assertRaises(NistPulseUnavailable):
+                fetch_json(error.url, 1)
 
     def test_draw_and_verify_with_fixture(self) -> None:
         with self.temp_repo() as root:

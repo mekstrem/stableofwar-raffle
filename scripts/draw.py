@@ -4,6 +4,7 @@ import os
 from datetime import timezone
 
 from raffle_core import (
+    NistPulseUnavailable,
     RaffleError,
     build_draw_record,
     common_arg_parser,
@@ -28,6 +29,11 @@ def main() -> int:
         "--not-before-now",
         action="store_true",
         help="Use a pulse no earlier than the current UTC minute when that is later than the scheduled draw time",
+    )
+    parser.add_argument(
+        "--skip-if-nist-unavailable",
+        action="store_true",
+        help="Exit successfully without artifacts if the target NIST pulse has not been published",
     )
     args = parser.parse_args()
 
@@ -68,6 +74,12 @@ def main() -> int:
         print(f"Winners: {', '.join(record['winners'])}")
         print(f"Proof hash: {record['proof_hash']}")
         return 0
+    except NistPulseUnavailable as exc:
+        if args.skip_if_nist_unavailable:
+            print(f"SKIPPED: {exc}")
+            return 0
+        print(f"ERROR: {exc}")
+        return 1
     except RaffleError as exc:
         print(f"ERROR: {exc}")
         return 1
@@ -75,4 +87,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -24,6 +24,10 @@ class RaffleError(Exception):
     pass
 
 
+class NistPulseUnavailable(RaffleError):
+    pass
+
+
 @dataclass(frozen=True)
 class Paths:
     root: Path
@@ -234,6 +238,11 @@ def fetch_json(url: str, timeout_seconds: int) -> dict[str, Any]:
     try:
         with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
             return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace").strip()
+        if exc.code == 404 and "Pulse Not Available" in body:
+            raise NistPulseUnavailable(f"NIST pulse is not available from {url}") from exc
+        raise RaffleError(f"Unable to fetch NIST pulse from {url}: HTTP {exc.code} {body}") from exc
     except urllib.error.URLError as exc:
         raise RaffleError(f"Unable to fetch NIST pulse from {url}: {exc}") from exc
 
@@ -266,27 +275,31 @@ def fetch_nist_pulse_at_or_after(
                 fetch_json(f"{base_url}/pulse/last", timeout_seconds)
             )
             target_index = pulse_index_at_or_after(latest, target_utc)
-            if target_index > int(latest["pulseIndex"]):
-                last_error = RaffleError(
-                    f"Target pulse {target_index} is not published yet; "
-                    f"latest is {latest['pulseIndex']}"
-                )
-            else:
-                url = f"{base_url}/chain/{chain_index}/pulse/{target_index}"
+            url = f"{base_url}/chain/{chain_index}/pulse/{target_index}"
+            period_seconds = int(latest.get("period", 60000)) / 1000
+            try:
                 pulse = normalize_nist_pulse(fetch_json(url, timeout_seconds))
+            except NistPulseUnavailable as exc:
+                last_error = exc
+                if target_utc < datetime.now(timezone.utc) - timedelta(seconds=period_seconds):
+                    raise
+            else:
                 pulse_time = parse_nist_timestamp(pulse["timeStamp"])
-                period_seconds = int(pulse.get("period", latest.get("period", 60000))) / 1000
+                pulse_period_seconds = int(pulse.get("period", latest.get("period", 60000))) / 1000
                 if pulse_time < target_utc:
                     last_error = RaffleError(
                         f"NIST pulse {pulse['pulseIndex']} is before target {format_nist_time(target_utc)}"
                     )
-                elif (pulse_time - target_utc).total_seconds() >= period_seconds:
+                elif (pulse_time - target_utc).total_seconds() >= pulse_period_seconds:
                     last_error = RaffleError(
                         f"NIST pulse {pulse['pulseIndex']} is not the first pulse after target {format_nist_time(target_utc)}"
                     )
                 else:
                     pulse["lookupUrl"] = url
                     return pulse
+        except NistPulseUnavailable as exc:
+            last_error = exc
+            raise
         except Exception as exc:
             last_error = exc
 
